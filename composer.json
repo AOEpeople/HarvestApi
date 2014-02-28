@@ -1,0 +1,14 @@
+{
+    "name": "aoepeople/harvestapi",
+    "type": "library",
+    "description": "PHP API for Harvest",
+    "authors":[
+        {
+            "name":"Fabrizio Branca",
+            "email":"{firstname}.{lastname}@aoe.com"
+        }
+    ],
+    "autoload": {
+        "classmap": ["src/"]
+    }
+}
