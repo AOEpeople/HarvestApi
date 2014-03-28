@@ -11,6 +11,11 @@ class HarvestApi
     protected $email;
     protected $password;
     protected $account;
+
+    /**
+     * @var Zend\Cache\Storage\StorageInterface
+     */
+    protected $cache;
     
     CONST API_URL = 'http://%s.harvestapp.com/';
 
@@ -26,6 +31,15 @@ class HarvestApi
         $this->email = $email;
         $this->password = $password;
         $this->account = $account;
+    }
+
+    /**
+     * Set cache
+     *
+     * @param \Zend\Cache\Storage\StorageInterface $cache
+     */
+    public function setCache(Zend\Cache\Storage\StorageInterface $cache) {
+        $this->cache = $cache;
     }
 
     /**
@@ -131,16 +145,13 @@ class HarvestApi
      * @return SimpleXMLElement
      */
     public function getAllProjects() {
-        $cacheFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'harvest_projects.xml';
-        if (is_file($cacheFile) && (time()-filemtime($cacheFile) < 60*10)) {
-            $returnData = file_get_contents($cacheFile);
-        } else {
+        $cacheKey = 'harvest_projects';
+        if (!$this->cache || ($res = $this->cache->getItem($cacheKey)) == false) {
             $url = sprintf('%s/projects', $this->getApiUrl());
-            $returnData = $this->doGetRequest($url);
-            file_put_contents($cacheFile, $returnData);
+            $res = $this->doGetRequest($url);
+            $this->cache->setItem($cacheKey, $res);
         }
-
-        return new SimpleXMLElement($returnData);
+        return new SimpleXMLElement($res);
     }
 
     /**
@@ -149,16 +160,13 @@ class HarvestApi
      * @return SimpleXMLElement
      */
     public function getAllClients() {
-        $cacheFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'harvest_clients.xml';
-        if (is_file($cacheFile) && (time()-filemtime($cacheFile) < 60*10)) {
-            $returnData = file_get_contents($cacheFile);
-        } else {
+        $cacheKey = 'harvest_clients';
+        if (!$this->cache || ($res = $this->cache->getItem($cacheKey)) == false) {
             $url = sprintf('%s/clients', $this->getApiUrl());
-            $returnData = $this->doGetRequest($url);
-            file_put_contents($cacheFile, $returnData);
+            $res = $this->doGetRequest($url);
+            $this->cache->setItem($cacheKey, $res);
         }
-
-        return new SimpleXMLElement($returnData);
+        return new SimpleXMLElement($res);
     }
 
     /**
@@ -167,16 +175,13 @@ class HarvestApi
      * @return SimpleXMLElement
      */
     public function getAllUsers() {
-        $cacheFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'harvest_users.xml';
-        if (is_file($cacheFile) && (time()-filemtime($cacheFile) < 60*10)) {
-            $returnData = file_get_contents($cacheFile);
-        } else {
+        $cacheKey = 'harvest_users';
+        if (!$this->cache || ($res = $this->cache->getItem($cacheKey)) == false) {
             $url = sprintf('%s/people', $this->getApiUrl());
-            $returnData = $this->doGetRequest($url);
-            file_put_contents($cacheFile, $returnData);
+            $res = $this->doGetRequest($url);
+            $this->cache->setItem($cacheKey, $res);
         }
-
-        return new SimpleXMLElement($returnData);
+        return new SimpleXMLElement($res);
     }
 
     /**
@@ -243,11 +248,8 @@ class HarvestApi
      */
     public function getEntriesForProject($projectId, $from, $to, $userId = NULL)
     {
-
-        $cacheFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "harvest_getEntriesForProject_{$projectId}_{$from}_{$to}_{$userId}.xml";
-        if (is_file($cacheFile) && (time()-filemtime($cacheFile) < 60*10)) {
-            $returnData = file_get_contents($cacheFile);
-        } else {
+        $cacheKey = "harvest_getEntriesForProject_{$projectId}_{$from}_{$to}_{$userId}";
+        if (!$this->cache || ($res = $this->cache->getItem($cacheKey)) == false) {
             $url = sprintf('%s/projects/%s/entries?from=%s&to=%s',
                 $this->getApiUrl(),
                 $projectId,
@@ -259,11 +261,10 @@ class HarvestApi
                     $userId
                 );
             }
-            $returnData = $this->doGetRequest($url);
-            file_put_contents($cacheFile, $returnData);
+            $res = $this->doGetRequest($url);
+            $this->cache->setItem($cacheKey, $res);
         }
-
-        return $returnData;
+        return $res;
     }
 
     /**
