@@ -214,6 +214,40 @@ class HarvestApi
     }
 
     /**
+     * Get project budget by project id
+     *
+     * @param $projectId
+     * @return string
+     */
+    public function getProjectBudget($projectId) {
+        $projects = $this->getAllProjects();
+        list($projectName) = $projects->xpath('//id[text()="'.$projectId.'"]/../budget/text()');
+        return (string)$projectName;
+    }
+
+    /**
+     * Get project budget by project id
+     *
+     * @param $projectId
+     * @return string
+     */
+    public function getProjectTotalTimeSpent($projectId) {
+        $totalTime = 0;
+        /*
+        $projects = $this->getAllProjects();
+        list($earliestRecord) = $projects->xpath('//id[text()="'.$projectId.'"]/../hint-earliest-record-at/text()');
+        list($latestRecord) = $projects->xpath('//id[text()="'.$projectId.'"]/../hint-latest-record-at/text()');
+        $entries = $this->getEntriesForProject($projectId, str_replace($earliestRecord, '-', ''), str_replace($latestRecord, '-', ''));
+        */
+        $entries = $this->getEntriesForProject($projectId, '20000101', date('Ymd', time()));
+        $entriesXml = new SimpleXMLElement($entries);
+        foreach ($entriesXml->{'day-entry'} as $dayEntry) { /* @var $dayEntry SimpleXMLElement */
+            $totalTime += (float)$dayEntry->hours;
+        }
+        return $totalTime;
+    }
+
+    /**
      * Check if a given project is billable
      *
      * @param $projectId
