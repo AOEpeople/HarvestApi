@@ -231,15 +231,23 @@ class HarvestApi
      * @param $projectId
      * @return string
      */
-    public function getProjectTotalTimeSpent($projectId) {
+    public function getProjectTotalTimeSpent($projectId, $from=null, $to=null) {
         $totalTime = 0;
+
+        if (is_null($from)) {
+            $from = '20000101';
+        }
+        if (is_null($to)) {
+            $to = date('Ymd', time());
+        }
+
         /*
         $projects = $this->getAllProjects();
         list($earliestRecord) = $projects->xpath('//id[text()="'.$projectId.'"]/../hint-earliest-record-at/text()');
         list($latestRecord) = $projects->xpath('//id[text()="'.$projectId.'"]/../hint-latest-record-at/text()');
         $entries = $this->getEntriesForProject($projectId, str_replace($earliestRecord, '-', ''), str_replace($latestRecord, '-', ''));
         */
-        $entries = $this->getEntriesForProject($projectId, '20000101', date('Ymd', time()));
+        $entries = $this->getEntriesForProject($projectId, $from, $to);
         $entriesXml = new SimpleXMLElement($entries);
         foreach ($entriesXml->{'day-entry'} as $dayEntry) { /* @var $dayEntry SimpleXMLElement */
             $totalTime += (float)$dayEntry->hours;
