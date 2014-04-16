@@ -17,7 +17,7 @@ class HarvestApi
      */
     protected $cache;
     
-    CONST API_URL = 'http://%s.harvestapp.com/';
+    CONST API_URL = 'https://%s.harvestapp.com/';
 
     /**
      * Constructor
