@@ -11,6 +11,7 @@ class HarvestApi
     protected $email;
     protected $password;
     protected $account;
+    protected $cacert;
 
     /**
      * @var Zend\Cache\Storage\StorageInterface
@@ -25,12 +26,14 @@ class HarvestApi
      * @param $email
      * @param $password
      * @param $account
+     * @param $cacert
      */
-    public function __construct($email, $password, $account)
+    public function __construct($email, $password, $account, $cacert=null)
     {
         $this->email = $email;
         $this->password = $password;
         $this->account = $account;
+        $this->cacert = $cacert;
     }
 
     /**
@@ -231,7 +234,7 @@ class HarvestApi
      * @param $projectId
      * @return string
      */
-    public function getProjectTotalTimeSpent($projectId, $from=null, $to=null) {
+    public function getProjectTotalTimeSpent($projectId, $from=null, $to=null, $ignoreUsers=array()) {
         $totalTime = 0;
 
         if (is_null($from)) {
@@ -250,6 +253,13 @@ class HarvestApi
         $entries = $this->getEntriesForProject($projectId, $from, $to);
         $entriesXml = new SimpleXMLElement($entries);
         foreach ($entriesXml->{'day-entry'} as $dayEntry) { /* @var $dayEntry SimpleXMLElement */
+
+            $userId = (string)$dayEntry->{'user-id'};
+
+            if (in_array($userId, $ignoreUsers)) {
+                continue;
+            }
+
             $totalTime += (float)$dayEntry->hours;
         }
         return $totalTime;
@@ -323,8 +333,12 @@ class HarvestApi
         curl_setopt($ch, CURLOPT_VERBOSE, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->getCurlHeaders());
         curl_setopt($ch, CURLOPT_USERAGENT, "AOE Harvest Timetracker");
+        if ($this->cacert && is_file($this->cacert)) {
+            curl_setopt($ch, CURLOPT_CAINFO, $this->cacert);
+        }
 
         $result = curl_exec($ch);
 
@@ -351,8 +365,12 @@ class HarvestApi
         curl_setopt($ch, CURLOPT_VERBOSE, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->getCurlHeaders());
         curl_setopt($ch, CURLOPT_USERAGENT, "AOE Harvest Timetracker");
+        if ($this->cacert && is_file($this->cacert)) {
+            curl_setopt($ch, CURLOPT_CAINFO, $this->cacert);
+        }
 
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
